@@ -1,0 +1,106 @@
+syntax="proto3";
+
+message DatanodeID{
+	 string ipAddr = 1;
+	 string hostName = 2;
+	 string datanodeUuid = 3;
+
+	 uint32 xferPort = 4;//datanode stream端口，用于传输数据
+	 uint32 infoPort = 5;//datanode的http端口，用于展示datanode内部信息
+	 uint32 ipcPort = 6;//进程间通信端口
+	 uint32 infoSecurePort = 7;
+}
+
+message DatanodeInfo{
+	 DatanodeID id = 1;
+	 uint64 capacity = 2;
+	 uint64 used = 3;
+	 uint64 remaining = 4;
+	 uint64 lastUpdate = 5;
+	 uint32 xceiverCount = 6;
+	 string location = 8;
+	enum AdminState{
+		NORMAL = 0;
+		DECOMMISSION_INPROGRESS = 1;
+		DECOMMISSIONED = 2;
+	}
+	 AdminState adminState = 9;
+
+}
+
+message Permission{
+	 uint32 psermission = 1;
+}
+
+message FileStatus{
+	enum FileType{
+		IS_DIR = 0;
+		IS_FILE = 1;
+		IS_SYMLINK = 2;
+	}
+	 FileType fileType = 1;
+	 string path = 2;
+	 uint64 length = 3;
+	 Permission permission = 4;
+	 string owner = 5;
+	 string group = 6;
+	 uint64 modification_time = 7;
+	 uint64 access_time = 8;
+}
+
+enum ChecksumType{
+	CHECKSUM_CRC32 = 0;//循环冗余校验
+	CHECKSUM_NULL = 1;
+	CHECKSUM_CRC32C = 2;
+}
+
+message ServerDefaults{
+	 uint64 blockSize = 1;
+	 uint32 bytesPerChecksum = 2;//每多少字节需要添加校验和
+	 uint32 writePacketSize = 3;//每次发送数据包大小
+	 uint32 replication = 4;
+	 uint32 fileBufferSize = 5;
+	 ChecksumType checksumType = 6;
+}
+
+message DirestoryListing{
+	repeated FileStatus partialListing = 1;
+	 uint32 remainingEntries = 2;//剩余未列出的目录
+}
+
+message Block{
+	 uint64 blockId = 1;
+	 uint64 generationStamp = 2;//时间戳
+	 uint64 size = 3;//大小
+}
+
+message BlockWithLocation{
+	 Block block = 1;
+	repeated string datanodeUuids = 2;
+}
+
+message LocatedBlock{
+	 Block block = 1;
+	 uint64 offset = 2;
+	repeated DatanodeInfo locs = 3;
+	 bool corrupt = 4;//如果存在冲突的数据块，则为true
+}
+
+message LocatedBlocks{
+	 uint64 fileLength = 1;
+	repeated LocatedBlock blocks = 2;
+	 LocatedBlock last = 3;
+	 bool isLastBlockcomplete = 5;
+}
+
+message BlocksWithLocation{
+	repeated Block blocks = 1;
+}
+
+//用于访问Block的token
+message BlockKey{
+	 uint32 keyId = 1;
+	 uint64 expiryDate = 2;
+	 bytes keyBytes = 3; //token中携带的密钥
+}
+
